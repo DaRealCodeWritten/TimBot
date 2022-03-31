@@ -56,7 +56,7 @@ generic_403 = Embed(
     description="You're not authorized to use this command",
     color=Colour.red()
 )
-tim = commands.Bot(commands_prefix="tim", intents=Intents.all(), case_insensitive=True)
+tim = commands.Bot(command_prefix="tim", intents=Intents.all(), case_insensitive=True)
 tim.generic_403 = generic_403
 tim.BadFlagError = BadFlagError
 tim.MissingRequiredFlagError = MissingRequiredFlagError
@@ -64,7 +64,8 @@ tim.flagsparse = flagsparse
 
 
 @tim.event
-def on_ready():
+async def on_ready():
+    tim.load_extension("cogs.complain")
     print("Ready to complain about OTS details")
 
 
@@ -72,18 +73,28 @@ def on_ready():
 async def ext_reload(ctx: commands.Context, *flags):
     default = {
         "--all": False,
-        "--cog": ""
+        "--cog": "EMPTY STRING"
     }
     settings = flagsparse(flags, default)
     if settings["--all"] is None and settings["--cog"] == "":
         raise MissingRequiredFlagError()
     elif settings["--all"] is True:
         for file in listdir("cogs"):
+            if "__pycache__" in file:
+                continue
             tim.reload_extension(f"cogs.{file.rstrip('.py')}")
+        await ctx.send("Reloaded all cogs")
     else:
         cog = settings["--cog"]
         try:
             tim.reload_extension(f"cogs.{cog}")
-        except commands.ExtensionNotFound:
-            error = errorembed("Could not find that extension")
+            await ctx.send(f"Reloaded cog {cog}")
+        except commands.ExtensionNotLoaded:
+            error = errorembed("Could not find that extension or it isn't loaded")
             await ctx.send(embed=error)
+            return
+
+
+with open(".auth") as file:
+    token = file.read()
+tim.run(token)
