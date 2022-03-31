@@ -12,7 +12,6 @@ def errorembed(error: str):
     return embed
 
 
-
 class BadFlagError(NameError):
     """Base class for all flag related errors"""
     def __init__(self, override_message: str = None):
@@ -39,7 +38,7 @@ def flagsparse(flags: tuple, defaults: dict) -> dict:
         if "=" in flag:
             args = flag.split("=")
             argsearch = defaults.get(args[0])
-            if argsearch is None:  # Either the flag doesn't exist or doesn't take an arg, raise an error
+            if argsearch is None or not argsearch:  # Either the flag doesn't exist or doesn't take an arg, raise an error
                 raise BadFlagError()
             else:
                 defaults[args[0]] = args[1]
